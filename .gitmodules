@@ -1,0 +1,9 @@
+[submodule "20240719-demo"]
+	path = 20240719-demo
+	url = https://gist.github.com/ivirshup/dc39029ad439cef4755e45582fc35541
+[submodule "write-tiledb-from-dask"]
+	path = write-tiledb-from-dask
+	url = https://gist.github.com/ivirshup/018bb8ae1ea7746db768c3672b8a007b
+[submodule "access-tiledb-from-dask"]
+	path = access-tiledb-from-dask
+	url = https://gist.github.com/ivirshup/8500d9a874ea9313ca87c0d5e46886e9
