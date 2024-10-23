@@ -1,0 +1,17 @@
+[project]
+name = "tiledbsoma-dask"
+version = "0.0.1"
+dependencies = [
+    "anndata",
+    "cellxgene-census",
+    "click",
+    "dask[array]",
+    "numba",
+    "scanpy",
+    "scipy",
+    "tiledbsoma",
+    "utz",
+]
+
+[project.scripts]
+tdbs-dask = "tiledbsoma_dask.cli.main:main"
