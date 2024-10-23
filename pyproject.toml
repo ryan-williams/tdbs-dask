@@ -10,7 +10,6 @@ dependencies = [
     "scanpy",
     "scipy",
     "tiledbsoma",
-    "utz",
 ]
 
 [project.scripts]

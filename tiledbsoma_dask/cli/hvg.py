@@ -1,15 +1,14 @@
-from typing import Tuple, Literal
+from typing import Literal
 
 import anndata as ad
-import scanpy as sc
 import dask.array as da
-import tiledbsoma
-from scipy import sparse
+import scanpy as sc
 import tiledb
+import tiledbsoma
 from click import option
+from scipy import sparse
 from somacore import AxisQuery
 from tiledbsoma import SOMATileDBContext
-from utz import decos
 
 from .base import cli
 from ..utils import to_listed_chunks
@@ -129,16 +128,17 @@ def hvg(
     adata = ad.AnnData(X=X)
     sc.pp.normalize_total(adata)
     sc.pp.log1p(adata)
-    hvg = sc.pp.highly_variable_genes(adata, inplace=False, subset=True)
-    return hvg
+    return sc.pp.highly_variable_genes(adata, inplace=False, subset=True)
 
-decos(
-    cli.command,
-    option('-c', '--chunk-size', type=int, default=DEFAULT_CHUNK_SIZE),
-    option('-m', '--mus-musculus', is_flag=True, help="Query Census for mouse data (default: human)"),
-    option('-M', '--measurement-name', default=DEFAULT_MEASUREMENT, help=f'Experiment "measurement" to read (default: "{DEFAULT_MEASUREMENT}")'),
-    option('-n', '--nrows', type=int, default=DEFAULT_NROWS),
-    option('-S', '--no-tiledbsoma', is_flag=True, help='Load `X` array chunks using `tiledb` instead of `tiledbsoma`'),
-    option('-v', '--census-version', default=DEFAULT_CENSUS_VERSION, help=""),
-    option('-X', '--X-layer-name', 'X_layer_name', default=DEFAULT_X_LAYER, help=f'"X" layer to read (default: "{DEFAULT_X_LAYER}")'),
-)(hvg)
+
+@cli.command('hvg')
+@option('-c', '--chunk-size', type=int, default=DEFAULT_CHUNK_SIZE)
+@option('-m', '--mus-musculus', is_flag=True, help="Query Census for mouse data (default: human)")
+@option('-M', '--measurement-name', default=DEFAULT_MEASUREMENT, help=f'Experiment "measurement" to read (default: "{DEFAULT_MEASUREMENT}")')
+@option('-n', '--nrows', type=int, default=DEFAULT_NROWS)
+@option('-S', '--no-tiledbsoma', is_flag=True, help='Load `X` array chunks using `tiledb` instead of `tiledbsoma`')
+@option('-v', '--census-version', default=DEFAULT_CENSUS_VERSION, help="")
+@option('-X', '--X-layer-name', 'X_layer_name', default=DEFAULT_X_LAYER, help=f'"X" layer to read (default: "{DEFAULT_X_LAYER}")')
+def hvg_cmd(*args, **kwargs):
+    df = hvg(*args, **kwargs)
+    print(df)
