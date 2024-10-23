@@ -9,7 +9,6 @@ dependencies = [
     "numba",
     "scanpy",
     "scipy",
-    "tiledbsoma",
 ]
 
 [project.scripts]
