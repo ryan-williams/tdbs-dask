@@ -3,8 +3,8 @@ from typing import Literal
 import anndata as ad
 import dask.array as da
 import scanpy as sc
-import tiledb
 import tiledbsoma
+import tiledb  # Must come after tiledbsoma! https://github.com/single-cell-data/TileDB-SOMA/issues/2293
 from click import option
 from scipy import sparse
 from somacore import AxisQuery
