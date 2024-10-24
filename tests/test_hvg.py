@@ -1,11 +1,12 @@
 import pytest
 
-from tiledbsoma_dask.cli.hvg import load_daskarray, CENSUS_S3
+from tiledbsoma_dask.cli.hvg import CENSUS_S3, DEFAULT_CENSUS_VERSION
+from tiledbsoma_dask.utils import load_daskarray
 
 
 @pytest.mark.parametrize("use_tiledbsoma", [True, False])
 def test_census_dask_array_read(use_tiledbsoma):
-    exp_uri = f"{CENSUS_S3}/2024-07-01/soma/census_data/homo_sapiens"
+    exp_uri = f"{CENSUS_S3}/{DEFAULT_CENSUS_VERSION}/soma/census_data/homo_sapiens"
     X = load_daskarray(
         exp_uri=exp_uri,
         chunk_size=1_000,
