@@ -4,9 +4,11 @@ Experiments reading TileDB-SOMA data using Dask.
 <!-- toc -->
 - [Install](#install)
 - [CLI](#cli)
-- [Examples](#examples)
-    - [100x10,000 chunks, using `tiledbsoma`](#tiledbsoma-1e6)
-    - [100x10,000 chunks, using `tiledb`](#tiledb-1e6)
+- [Example: 1MM cells (100x10,000 chunks)](#examples)
+    - [`tiledbsoma` + Dask: 210s](#1MM-tiledbsoma-dask)
+    - [`tiledb` + Dask: 90s](#1MM-tiledb-dask)
+    - [`tiledbsoma` (no Dask): OOM 💥](#1MM-tiledbsoma)
+    - [`tiledb` (no Dask): 136s](#1MM-tiledb)
 <!-- /toc -->
 
 Extends work by [**@ivirshup**]:
@@ -45,9 +47,11 @@ tdbs-dask hvg --help
 #   --help                       Show this message and exit.
 ```
 
-## Examples <a id="examples"></a>
+## Example: 1MM cells (100x10,000 chunks) <a id="examples"></a>
 
-### 100x10,000 chunks, using `tiledbsoma` <a id="tiledbsoma-1e6"></a>
+These were run on an `m6a.4xlarge` (64GiB RAM, 16vCPUs), Ubuntu AMI `ami-0b33ebbed151cf740`.
+
+### `tiledbsoma` + Dask: 210s <a id="1MM-tiledbsoma-dask"></a>
 <!-- `bmdf -- time tdbs-dask hvg` -->
 ```bash
 time -p tdbs-dask hvg
@@ -70,7 +74,7 @@ time -p tdbs-dask hvg
 # sys 346.74
 ```
 
-### 100x10,000 chunks, using `tiledb` <a id="tiledb-1e6"></a>
+### `tiledb` + Dask: 90s <a id="1MM-tiledb-dask"></a>
 <!-- `bmdf -- time tdbs-dask hvg -S` -->
 ```bash
 time -p tdbs-dask hvg -S
@@ -91,6 +95,39 @@ time -p tdbs-dask hvg -S
 # real 90.66
 # user 334.99
 # sys 331.08
+```
+
+### `tiledbsoma` (no Dask): OOM 💥 <a id="1MM-tiledbsoma"></a>
+<!-- `bmdf -- time tdbs-dask hvg -c0` -->
+```bash
+time -p tdbs-dask hvg -c0
+# real 69.79
+# user 68.72
+# sys 85.26
+# Exited 137
+```
+
+### `tiledb` (no Dask): 136s <a id="1MM-tiledb"></a>
+<!-- `bmdf -- time tdbs-dask hvg -c0 -S` -->
+```bash
+time -p tdbs-dask hvg -c0 -S
+#           means  dispersions  ... dispersions_norm  highly_variable
+# 0      0.048454     0.735610  ...         0.552318             True
+# 4      0.031885     0.759286  ...         0.580610             True
+# 5      0.094259     0.976116  ...         0.839716             True
+# 6      0.209642     1.557129  ...         1.534013             True
+# 8      0.090585     0.703962  ...         0.514499             True
+# ...         ...          ...  ...              ...              ...
+# 59770  0.031929     0.872826  ...         0.716287             True
+# 59913  0.058735     1.416697  ...         1.366200             True
+# 60199  0.054201     1.452568  ...         1.409066             True
+# 60319  0.013607     1.169472  ...         1.070772             True
+# 60415  0.023608     0.813904  ...         0.645877             True
+#
+# [8721 rows x 5 columns]
+# real 136.72
+# user 145.96
+# sys 93.01
 ```
 
 
