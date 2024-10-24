@@ -3,7 +3,7 @@ from typing import Optional
 import dask.array as da
 import tiledb
 import tiledbsoma
-from scipy import sparse
+from scipy.sparse import csr_matrix
 from somacore import AxisQuery
 from tiledbsoma import SOMATileDBContext
 
@@ -70,7 +70,38 @@ def sparse_chunk(
         soma_dim_0, soma_dim_1, count = block["soma_dim_0"], block["soma_dim_1"], block["soma_data"]
     soma_dim_0 = soma_dim_0 - obs_start
     soma_dim_1 = soma_dim_1 - var_start
-    return sparse.csr_matrix((count, (soma_dim_0, soma_dim_1)), shape=shape)
+    return csr_matrix((count, (soma_dim_0, soma_dim_1)), shape=shape)
+
+
+def load_array(
+    exp_uri: str,
+    nrows: int,
+    use_tiledbsoma: bool,
+    tiledb_config: Optional[dict] = None,
+    measurement_name: str = DEFAULT_MEASUREMENT,
+    X_layer_name: str = DEFAULT_X_LAYER,
+) -> csr_matrix:
+    if tiledb_config is None:
+        tiledb_config = DEFAULT_CONFIG
+    layer_uri = f"{exp_uri}/ms/{measurement_name}/X/{X_layer_name}"
+    uri = exp_uri if use_tiledbsoma else layer_uri
+    if use_tiledbsoma:
+        soma_ctx = SOMATileDBContext(tiledb_config=tiledb_config)
+        with tiledbsoma.open(uri, context=soma_ctx) as exp:
+            with exp.axis_query(
+                measurement_name=measurement_name,
+                obs_query=AxisQuery(coords=(slice(0, nrows - 1),)),
+            ) as query:
+                X = query.X(X_layer_name)
+                nvars = X.shape[1]
+                tbl = X.tables().concat()
+                soma_dim_0, soma_dim_1, count = [ col.to_numpy() for col in tbl.columns ]
+    else:
+        with tiledb.open(uri, config=tiledb_config) as tiledb_array:
+            arr = tiledb_array[:nrows, :]
+            nvars = tiledb_array.shape[1]
+        soma_dim_0, soma_dim_1, count = arr["soma_dim_0"], arr["soma_dim_1"], arr["soma_data"]
+    return csr_matrix((count, (soma_dim_0, soma_dim_1)), shape=(nrows, nvars))
 
 
 def load_daskarray(
@@ -81,7 +112,7 @@ def load_daskarray(
     tiledb_config: Optional[dict] = None,
     measurement_name: str = DEFAULT_MEASUREMENT,
     X_layer_name: str = DEFAULT_X_LAYER,
-):
+) -> da.Array:
     """Load a TileDB-SOMA X layer as a Dask array, using ``tiledb`` or ``tiledbsoma``."""
     if tiledb_config is None:
         tiledb_config = DEFAULT_CONFIG
@@ -106,7 +137,7 @@ def load_daskarray(
             tuple(to_listed_chunks(chunk_size, nrows)),
             (nvars,)
         ),
-        meta=sparse.csr_matrix((0, 0), dtype=dtype),
+        meta=csr_matrix((0, 0), dtype=dtype),
         uri=uri,
         measurement_name=measurement_name,
         X_layer_name=X_layer_name,

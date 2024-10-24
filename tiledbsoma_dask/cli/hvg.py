@@ -5,7 +5,7 @@ import scanpy as sc
 from click import option
 
 from .base import cli
-from ..utils import DEFAULT_MEASUREMENT, DEFAULT_X_LAYER, load_daskarray
+from ..utils import DEFAULT_MEASUREMENT, DEFAULT_X_LAYER, load_daskarray, load_array
 
 CENSUS_S3 = "s3://cellxgene-census-public-us-west-2/cell-census"
 DEFAULT_CENSUS_VERSION = "2024-07-01"
@@ -30,14 +30,23 @@ def hvg(
     soma_uri = f"{CENSUS_S3}/{census_version}/soma"
     exp_uri = f"{soma_uri}/census_data/{species}"
     use_tiledbsoma = not no_tiledbsoma
-    X = load_daskarray(
-        exp_uri=exp_uri,
-        chunk_size=chunk_size,
-        measurement_name=measurement_name,
-        nrows=nrows,
-        use_tiledbsoma=use_tiledbsoma,
-        X_layer_name=X_layer_name,
-    )
+    if chunk_size:
+        X = load_daskarray(
+            exp_uri=exp_uri,
+            chunk_size=chunk_size,
+            measurement_name=measurement_name,
+            nrows=nrows,
+            use_tiledbsoma=use_tiledbsoma,
+            X_layer_name=X_layer_name,
+        )
+    else:
+        X = load_array(
+            exp_uri=exp_uri,
+            measurement_name=measurement_name,
+            nrows=nrows,
+            use_tiledbsoma=use_tiledbsoma,
+            X_layer_name=X_layer_name,
+        )
 
     adata = ad.AnnData(X=X)
     sc.pp.normalize_total(adata)
@@ -46,7 +55,7 @@ def hvg(
 
 
 @cli.command('hvg')
-@option('-c', '--chunk-size', type=int, default=DEFAULT_CHUNK_SIZE)
+@option('-c', '--chunk-size', type=int, default=DEFAULT_CHUNK_SIZE, help=f"Number of rows to process in each Dask task; 0 to run without Dask (default: {DEFAULT_CHUNK_SIZE}")
 @option('-m', '--mus-musculus', is_flag=True, help="Query Census for mouse data (default: human)")
 @option('-M', '--measurement-name', default=DEFAULT_MEASUREMENT, help=f'Experiment "measurement" to read (default: "{DEFAULT_MEASUREMENT}")')
 @option('-n', '--nrows', type=int, default=DEFAULT_NROWS)
