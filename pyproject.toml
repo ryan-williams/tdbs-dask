@@ -13,6 +13,12 @@ dependencies = [
     "tiledbsoma",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "bmdf",
+    "pytest",
+]
+
 [project.scripts]
 tdbs-dask = "tiledbsoma_dask.cli.main:main"
 
