@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Literal
 
 import anndata as ad
@@ -62,6 +63,7 @@ def hvg(
 @option('-S', '--no-tiledbsoma', is_flag=True, help='Load `X` array chunks using `tiledb` instead of `tiledbsoma`')
 @option('-v', '--census-version', default=DEFAULT_CENSUS_VERSION, help="")
 @option('-X', '--X-layer-name', 'X_layer_name', default=DEFAULT_X_LAYER, help=f'"X" layer to read (default: "{DEFAULT_X_LAYER}")')
+@wraps(hvg)
 def hvg_cmd(*args, **kwargs):
     df = hvg(*args, **kwargs)
     print(df)

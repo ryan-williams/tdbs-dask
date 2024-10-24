@@ -32,7 +32,8 @@ tdbs-dask hvg --help
 #   TileDB-SOMA data using Dask.
 #
 # Options:
-#   -c, --chunk-size INTEGER
+#   -c, --chunk-size INTEGER     Number of rows to process in each Dask task; 0
+#                                to run without Dask (default: 10000.0
 #   -m, --mus-musculus           Query Census for mouse data (default: human)
 #   -M, --measurement-name TEXT  Experiment "measurement" to read (default:
 #                                "RNA")
@@ -48,9 +49,49 @@ tdbs-dask hvg --help
 
 ### 100x10,000 chunks, using `tiledbsoma` <a id="tiledbsoma-1e6"></a>
 <!-- `bmdf -- time tdbs-dask hvg` -->
+```bash
+time -p tdbs-dask hvg
+#           means  dispersions  ... dispersions_norm  highly_variable
+# 0      0.048454     0.735610  ...         0.552318             True
+# 4      0.031885     0.759286  ...         0.580610             True
+# 5      0.094259     0.976116  ...         0.839716             True
+# 6      0.209642     1.557129  ...         1.534013             True
+# 8      0.090585     0.703962  ...         0.514499             True
+# ...         ...          ...  ...              ...              ...
+# 59770  0.031929     0.872826  ...         0.716287             True
+# 59913  0.058735     1.416697  ...         1.366200             True
+# 60199  0.054201     1.452568  ...         1.409066             True
+# 60319  0.013607     1.169472  ...         1.070772             True
+# 60415  0.023608     0.813904  ...         0.645877             True
+#
+# [8721 rows x 5 columns]
+# real 210.91
+# user 328.07
+# sys 346.74
+```
 
 ### 100x10,000 chunks, using `tiledb` <a id="tiledb-1e6"></a>
 <!-- `bmdf -- time tdbs-dask hvg -S` -->
+```bash
+time -p tdbs-dask hvg -S
+#           means  dispersions  ... dispersions_norm  highly_variable
+# 0      0.048454     0.735610  ...         0.552318             True
+# 4      0.031885     0.759286  ...         0.580610             True
+# 5      0.094259     0.976116  ...         0.839716             True
+# 6      0.209642     1.557129  ...         1.534013             True
+# 8      0.090585     0.703962  ...         0.514499             True
+# ...         ...          ...  ...              ...              ...
+# 59770  0.031929     0.872826  ...         0.716287             True
+# 59913  0.058735     1.416697  ...         1.366200             True
+# 60199  0.054201     1.452568  ...         1.409066             True
+# 60319  0.013607     1.169472  ...         1.070772             True
+# 60415  0.023608     0.813904  ...         0.645877             True
+#
+# [8721 rows x 5 columns]
+# real 90.66
+# user 334.99
+# sys 331.08
+```
 
 
 [**@ivirshup**]: https://github.com/ivirshup
