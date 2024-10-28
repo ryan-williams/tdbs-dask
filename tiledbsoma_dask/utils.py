@@ -5,8 +5,7 @@ import tiledb
 import tiledbsoma
 from scipy.sparse import csr_matrix
 from somacore import AxisQuery
-from tiledbsoma import SOMATileDBContext
-
+from tiledbsoma import SOMATileDBContext, SparseNDArray
 
 DEFAULT_MEASUREMENT = "RNA"
 DEFAULT_X_LAYER = "raw"
@@ -45,8 +44,6 @@ def sparse_chunk(
     block_info,
     uri: str,
     use_tiledbsoma: bool,
-    measurement_name: str,
-    X_layer_name: str,
     tiledb_config: dict,
 ):
     shape = block_info[None]["chunk-shape"]
@@ -55,18 +52,13 @@ def sparse_chunk(
     obs_slice = slice(obs_start, obs_end - (1 if use_tiledbsoma else 0))
     var_slice = slice(var_start, var_end - (1 if use_tiledbsoma else 0))
     if use_tiledbsoma:
-        with tiledbsoma.open(uri, context=SOMATileDBContext(tiledb_config=tiledb_config)) as exp:
-            with exp.axis_query(
-                measurement_name=measurement_name,
-                obs_query=AxisQuery(coords=(obs_slice,)),
-                var_query=AxisQuery(coords=(var_slice,)),
-            ) as query:
-                X = query.X(X_layer_name)
-                tbl = X.tables().concat()
+        soma_ctx = SOMATileDBContext(tiledb_config=tiledb_config)
+        with SparseNDArray.open(uri, context=soma_ctx) as arr:
+            tbl = arr.read((obs_slice, var_slice)).tables().concat()
         soma_dim_0, soma_dim_1, count = [ col.to_numpy() for col in tbl.columns ]
     else:
-        with tiledb.open(uri, config=tiledb_config) as tiledb_array:
-            block = tiledb_array[obs_slice, var_slice]
+        with tiledb.open(uri, config=tiledb_config) as arr:
+            block = arr[obs_slice, var_slice]
         soma_dim_0, soma_dim_1, count = block["soma_dim_0"], block["soma_dim_1"], block["soma_data"]
     soma_dim_0 = soma_dim_0 - obs_start
     soma_dim_1 = soma_dim_1 - var_start
@@ -83,19 +75,13 @@ def load_array(
 ) -> csr_matrix:
     if tiledb_config is None:
         tiledb_config = DEFAULT_CONFIG
-    layer_uri = f"{exp_uri}/ms/{measurement_name}/X/{X_layer_name}"
-    uri = exp_uri if use_tiledbsoma else layer_uri
+    uri = f"{exp_uri}/ms/{measurement_name}/X/{X_layer_name}"
     if use_tiledbsoma:
         soma_ctx = SOMATileDBContext(tiledb_config=tiledb_config)
-        with tiledbsoma.open(uri, context=soma_ctx) as exp:
-            with exp.axis_query(
-                measurement_name=measurement_name,
-                obs_query=AxisQuery(coords=(slice(0, nrows - 1),)),
-            ) as query:
-                X = query.X(X_layer_name)
-                nvars = X.shape[1]
-                tbl = X.tables().concat()
-                soma_dim_0, soma_dim_1, count = [ col.to_numpy() for col in tbl.columns ]
+        with SparseNDArray.open(uri, context=soma_ctx) as arr:
+            nvars = arr.shape[1]
+            tbl = arr.read(coords=(slice(0, nrows - 1),)).tables().concat()
+            soma_dim_0, soma_dim_1, count = [ col.to_numpy() for col in tbl.columns ]
     else:
         with tiledb.open(uri, config=tiledb_config) as tiledb_array:
             arr = tiledb_array[:nrows, :]
@@ -116,13 +102,10 @@ def load_daskarray(
     """Load a TileDB-SOMA X layer as a Dask array, using ``tiledb`` or ``tiledbsoma``."""
     if tiledb_config is None:
         tiledb_config = DEFAULT_CONFIG
-    layer_uri = f"{exp_uri}/ms/{measurement_name}/X/{X_layer_name}"
-    uri = exp_uri if use_tiledbsoma else layer_uri
+    uri = f"{exp_uri}/ms/{measurement_name}/X/{X_layer_name}"
     if use_tiledbsoma:
         soma_ctx = SOMATileDBContext(tiledb_config=tiledb_config)
-        with tiledbsoma.open(uri, context=soma_ctx) as exp:
-            X = exp.ms[measurement_name].X
-            layer = X[X_layer_name]
+        with SparseNDArray.open(uri, context=soma_ctx) as layer:
             _, _, data_dtype = layer.schema.types
             dtype = data_dtype.to_pandas_dtype()
             nvars = layer.shape[1]
@@ -139,8 +122,6 @@ def load_daskarray(
         ),
         meta=csr_matrix((0, 0), dtype=dtype),
         uri=uri,
-        measurement_name=measurement_name,
-        X_layer_name=X_layer_name,
         use_tiledbsoma=use_tiledbsoma,
         tiledb_config=tiledb_config,
     )
