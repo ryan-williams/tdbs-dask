@@ -5,9 +5,9 @@ Experiments reading TileDB-SOMA data using Dask.
 - [Install](#install)
 - [CLI](#cli)
 - [Example: 1MM cells (100x10,000 chunks)](#examples)
-    - [`tiledbsoma` + Dask: 112s](#1MM-tiledbsoma-dask)
-    - [`tiledb` + Dask: 88s](#1MM-tiledb-dask)
-    - [`tiledbsoma` (no Dask): 86s](#1MM-tiledbsoma)
+    - [`tiledbsoma` + Dask: 103s](#1MM-tiledbsoma-dask)
+    - [`tiledb` + Dask: 89s](#1MM-tiledb-dask)
+    - [`tiledbsoma` (no Dask): 66s](#1MM-tiledbsoma)
     - [`tiledb` (no Dask): 114s](#1MM-tiledb)
 <!-- /toc -->
 
@@ -51,7 +51,7 @@ tdbs-dask hvg --help
 
 These were run on an `m6a.4xlarge` (64GiB RAM, 16vCPUs), Ubuntu AMI `ami-0b33ebbed151cf740`.
 
-### `tiledbsoma` + Dask: 112s <a id="1MM-tiledbsoma-dask"></a>
+### `tiledbsoma` + Dask: 103s <a id="1MM-tiledbsoma-dask"></a>
 <!-- `bmdf -- time tdbs-dask hvg` -->
 ```bash
 time -p tdbs-dask hvg
@@ -69,12 +69,12 @@ time -p tdbs-dask hvg
 # 60415  0.023608     0.813904  ...         0.645877             True
 #
 # [8721 rows x 5 columns]
-# real 111.86
-# user 299.99
-# sys 314.55
+# real 103.43
+# user 293.30
+# sys 284.44
 ```
 
-### `tiledb` + Dask: 88s <a id="1MM-tiledb-dask"></a>
+### `tiledb` + Dask: 89s <a id="1MM-tiledb-dask"></a>
 <!-- `bmdf -- time tdbs-dask hvg -S` -->
 ```bash
 time -p tdbs-dask hvg -S
@@ -92,18 +92,18 @@ time -p tdbs-dask hvg -S
 # 60415  0.023608     0.813904  ...         0.645877             True
 #
 # [8721 rows x 5 columns]
-# real 88.05
-# user 323.25
-# sys 297.50
+# real 89.28
+# user 329.51
+# sys 305.88
 ```
 
-### `tiledbsoma` (no Dask): 86s <a id="1MM-tiledbsoma"></a>
+### `tiledbsoma` (no Dask): 66s <a id="1MM-tiledbsoma"></a>
 <!-- `bmdf -- time tdbs-dask hvg -c0` -->
 ```bash
 time -p tdbs-dask hvg -c0
-# real 85.96
-# user 73.29
-# sys 91.01
+# real 66.24
+# user 64.24
+# sys 71.02
 ```
 
 ### `tiledb` (no Dask): 114s <a id="1MM-tiledb"></a>
@@ -124,9 +124,9 @@ time -p tdbs-dask hvg -c0 -S
 # 60415  0.023608     0.813904  ...         0.645877             True
 #
 # [8721 rows x 5 columns]
-# real 113.60
-# user 142.74
-# sys 73.58
+# real 114.64
+# user 141.15
+# sys 71.12
 ```
 
 
