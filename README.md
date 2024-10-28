@@ -5,10 +5,10 @@ Experiments reading TileDB-SOMA data using Dask.
 - [Install](#install)
 - [CLI](#cli)
 - [Example: 1MM cells (100x10,000 chunks)](#examples)
-    - [`tiledbsoma` + Dask: 210s](#1MM-tiledbsoma-dask)
-    - [`tiledb` + Dask: 90s](#1MM-tiledb-dask)
-    - [`tiledbsoma` (no Dask): OOM 💥](#1MM-tiledbsoma)
-    - [`tiledb` (no Dask): 136s](#1MM-tiledb)
+    - [`tiledbsoma` + Dask: 112s](#1MM-tiledbsoma-dask)
+    - [`tiledb` + Dask: 88s](#1MM-tiledb-dask)
+    - [`tiledbsoma` (no Dask): 86s](#1MM-tiledbsoma)
+    - [`tiledb` (no Dask): 114s](#1MM-tiledb)
 <!-- /toc -->
 
 Extends work by [**@ivirshup**]:
@@ -51,7 +51,7 @@ tdbs-dask hvg --help
 
 These were run on an `m6a.4xlarge` (64GiB RAM, 16vCPUs), Ubuntu AMI `ami-0b33ebbed151cf740`.
 
-### `tiledbsoma` + Dask: 210s <a id="1MM-tiledbsoma-dask"></a>
+### `tiledbsoma` + Dask: 112s <a id="1MM-tiledbsoma-dask"></a>
 <!-- `bmdf -- time tdbs-dask hvg` -->
 ```bash
 time -p tdbs-dask hvg
@@ -69,12 +69,12 @@ time -p tdbs-dask hvg
 # 60415  0.023608     0.813904  ...         0.645877             True
 #
 # [8721 rows x 5 columns]
-# real 210.91
-# user 328.07
-# sys 346.74
+# real 111.86
+# user 299.99
+# sys 314.55
 ```
 
-### `tiledb` + Dask: 90s <a id="1MM-tiledb-dask"></a>
+### `tiledb` + Dask: 88s <a id="1MM-tiledb-dask"></a>
 <!-- `bmdf -- time tdbs-dask hvg -S` -->
 ```bash
 time -p tdbs-dask hvg -S
@@ -92,22 +92,21 @@ time -p tdbs-dask hvg -S
 # 60415  0.023608     0.813904  ...         0.645877             True
 #
 # [8721 rows x 5 columns]
-# real 90.66
-# user 334.99
-# sys 331.08
+# real 88.05
+# user 323.25
+# sys 297.50
 ```
 
-### `tiledbsoma` (no Dask): OOM 💥 <a id="1MM-tiledbsoma"></a>
+### `tiledbsoma` (no Dask): 86s <a id="1MM-tiledbsoma"></a>
 <!-- `bmdf -- time tdbs-dask hvg -c0` -->
 ```bash
 time -p tdbs-dask hvg -c0
-# real 69.79
-# user 68.72
-# sys 85.26
-# Exited 137
+# real 85.96
+# user 73.29
+# sys 91.01
 ```
 
-### `tiledb` (no Dask): 136s <a id="1MM-tiledb"></a>
+### `tiledb` (no Dask): 114s <a id="1MM-tiledb"></a>
 <!-- `bmdf -- time tdbs-dask hvg -c0 -S` -->
 ```bash
 time -p tdbs-dask hvg -c0 -S
@@ -125,9 +124,9 @@ time -p tdbs-dask hvg -c0 -S
 # 60415  0.023608     0.813904  ...         0.645877             True
 #
 # [8721 rows x 5 columns]
-# real 136.72
-# user 145.96
-# sys 93.01
+# real 113.60
+# user 142.74
+# sys 73.58
 ```
 
 
