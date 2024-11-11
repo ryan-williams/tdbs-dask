@@ -1,10 +1,8 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import dask.array as da
 import tiledb
-import tiledbsoma
 from scipy.sparse import csr_matrix
-from somacore import AxisQuery
 from tiledbsoma import SOMATileDBContext, SparseNDArray
 
 DEFAULT_MEASUREMENT = "RNA"
@@ -40,11 +38,10 @@ def to_listed_chunks(chunk_size: int, dim_size: int) -> list[int]:
 
 
 def sparse_chunk(
-    block_id,
-    block_info,
+    block_info: Dict[None, Any],
     uri: str,
     use_tiledbsoma: bool,
-    tiledb_config: dict,
+    tiledb_config: Dict[str, str],
 ):
     shape = block_info[None]["chunk-shape"]
     array_location = block_info[None]["array-location"]
