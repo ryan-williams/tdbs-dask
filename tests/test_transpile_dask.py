@@ -1,7 +1,12 @@
+from os.path import dirname, join
 from re import fullmatch
+
+import dask
 
 import dask.array as da
 from numpy.ma.testutils import assert_array_equal
+from tiledbsoma import Experiment
+from tiledbsoma.io import to_anndata
 
 from tiledb_dask.main import Graph
 
@@ -24,3 +29,20 @@ def test_transpile_array():
             assert root_arr.shape == (chunk, chunk)
             assert leaf_arr.shape == (chunk, chunk)
             assert_array_equal(root_arr, leaf_arr * 10)
+
+
+TESTS_DIR = dirname(__file__)
+ROOT_DIR = dirname(TESTS_DIR)
+PBMC_PATH = join(ROOT_DIR, "pbmc-small")
+
+
+def test_tdbs_dask():
+    exp = Experiment.open(PBMC_PATH)
+    dask.config.set(scheduler="synchronous")
+    add = to_anndata(exp, "RNA", dask_chunk_size=20)
+    # x = add.X.compute()
+    graph = Graph(add.X)
+    evald = { k: graph.eval(k) for k in graph }
+    assert len(evald) == 13
+    # nodes = graph.nodes
+    # assert len(nodes) == 12
