@@ -1,6 +1,9 @@
 from os.path import dirname, join
 from re import fullmatch
 
+import numpy as np
+from numpy.testing import assert_array_almost_equal
+
 import dask
 
 import dask.array as da
@@ -14,9 +17,23 @@ sha = r'(?P<sha>[\da-f]{32})'
 
 def test_transpile_array():
     chunk = 2
-    x = da.random.random((chunk * 2, chunk * 2), chunks=(chunk, chunk))
+    state = da.random.RandomState(1234)
+    x = state.random((chunk * 2, chunk * 2), chunks=(chunk, chunk))
+    # x = da.random.random((chunk * 2, chunk * 2), chunks=(chunk, chunk))
     x = da.map_blocks(lambda x: x * 10, x)
-    graph = Graph(x.dask)
+    xd = x.compute()
+    graph = Graph(x)
+    xg = graph.compute()
+    assert_array_equal(xd, xg)
+    assert_array_almost_equal(
+        xg,
+        np.array([
+            [ 0.10836702, 2.83828638, 7.06684355, 2.78434307, ],
+            [ 9.36079801, 6.69260906, 3.07083901, 9.35725479, ],
+            [ 7.64828082, 9.13358399, 0.95931109, 0.1179514 , ],
+            [ 4.29262317, 2.85160917, 6.9174312 , 1.42884959, ],
+        ])
+    )
     evald = { k: graph.eval(k) for k in graph }
     root_layer = graph.root_layer
     assert fullmatch(f'lambda-{sha}', root_layer)
@@ -40,9 +57,10 @@ def test_tdbs_dask():
     exp = Experiment.open(PBMC_PATH)
     dask.config.set(scheduler="synchronous")
     add = to_anndata(exp, "RNA", dask_chunk_size=20)
-    # x = add.X.compute()
+    xd = add.X.compute()
     graph = Graph(add.X)
+    xg = graph.compute()
+    assert_array_equal(xd.todense(), xg.todense())
+
     evald = { k: graph.eval(k) for k in graph }
     assert len(evald) == 13
-    # nodes = graph.nodes
-    # assert len(nodes) == 12
