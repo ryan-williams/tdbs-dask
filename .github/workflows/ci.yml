@@ -2,13 +2,16 @@ name: CI
 on:
   push:
     branches: [ "**" ]
+env:
+  TILEDB_REST_TOKEN: ${{ secrets.TILEDB_REST_TOKEN }}
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.11.10
+          python-version: 3.11.8
+          cache: 'pip'
       - run: pip install -e .[dev]
       - run: pytest tests

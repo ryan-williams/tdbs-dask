@@ -1,4 +1,4 @@
-from typing import Any, Tuple, Callable, Sequence
+from typing import Any, Tuple, Callable, Sequence, Union
 
 import numpy as np
 from click import command
@@ -14,7 +14,6 @@ class Graph:
         self.darr = darr
         self.dask = darr.dask
         self._evals = {}
-        self._fns = {}
 
     @property
     def root_layer(self) -> str:
@@ -38,8 +37,8 @@ class Graph:
     def nodes(self):
         return list(self.dask.items())
 
-    def compute(self):
-        evald = { k: self.eval(k) for k in self }
+    def compute(self, local: bool = True):
+        evald = { k: self.eval(k, local=local) for k in self }
         root_layer = self.root_layer
         results = {}
         def save(results, idxs, block):
@@ -65,24 +64,19 @@ class Graph:
                 return results
 
         results_tpl = to_tpls(results)
-        # blocks = { v for k, v in evald.items() if k[0] == root_layer }
         return finalize(results_tpl)
 
-    def call(self, fn: Callable, args: Sequence) -> Any:
-        # fn_id = id(fn)
-        # if fn_id not in self._fns:
-        #     self._fns[fn_id] = Delayed(fn, local=True)
-        # tile_fn = self._fns[fn_id]
-        tile_fn = Delayed(fn, local=True)
+    def call(self, fn: Callable, args: Sequence, local: bool = True) -> Any:
+        tile_fn = Delayed(fn, local=local)
         res = tile_fn(*args).compute()
         return res
 
-    def eval(self, k: str | Tuple[str, int, ...]) -> Any:
+    def eval(self, k: Union[str, Tuple], local: bool = True) -> Any:
         if k not in self.dask:
             raise KeyError(f"{k} not found in {', '.join(self.dask.keys())}")
         if k not in self._evals:
             v = self.dask[k]
-            if isinstance(v, np.ndarray):
+            if isinstance(v, (np.ndarray, dict)):
                 self._evals[k] = v
             elif isinstance(v, tuple):
                 fn, *args = v
@@ -91,7 +85,7 @@ class Graph:
                     args2 = []
                     for arg in args:
                         if isinstance(arg, tuple) and isinstance(arg[0], str):
-                            evald = self.eval(arg)
+                            evald = self.eval(arg, local=local)
                             args2.append(evald)
                         else:
                             args2.append(arg)
@@ -104,12 +98,12 @@ class Graph:
                             if arg in inkeys_map:
                                 return normalize(args[inkeys_map[arg]])
                             elif arg in self.dask:
-                                return self.eval(arg)
+                                return self.eval(arg, local=local)
                             else:
                                 return arg
                         elif isinstance(arg, tuple):
                             if isinstance(arg[0], str):
-                                return self.eval(arg)
+                                return self.eval(arg, local=local)
                             elif arg[0] is dict:
                                 return { k: normalize(v) for k, v in arg[1] }
                             elif arg[0] is tuple:
@@ -120,10 +114,10 @@ class Graph:
                             return arg
 
                     sub_args2 = [ normalize(arg) for arg in sub_args ]
-                    sub_val = self.call(sub_fn, sub_args2)
+                    sub_val = self.call(sub_fn, sub_args2, local=local)
                     self._evals[k] = sub_val
                 else:
-                    self._evals[k] = self.call(fn, args)
+                    self._evals[k] = self.call(fn, args, local=local)
             else:
                 raise ValueError(f"Dask key {k}: unrecognized value type {type(v)}: {v}")
 

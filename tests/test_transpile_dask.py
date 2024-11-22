@@ -13,13 +13,16 @@ from tiledbsoma.io import to_anndata
 
 from tiledb_dask.main import Graph
 
+TESTS_DIR = dirname(__file__)
+ROOT_DIR = dirname(TESTS_DIR)
+PBMC_PATH = join(ROOT_DIR, "pbmc-small")
+
 sha = r'(?P<sha>[\da-f]{32})'
 
 def test_transpile_array():
     chunk = 2
     state = da.random.RandomState(1234)
     x = state.random((chunk * 2, chunk * 2), chunks=(chunk, chunk))
-    # x = da.random.random((chunk * 2, chunk * 2), chunks=(chunk, chunk))
     x = da.map_blocks(lambda x: x * 10, x)
     xd = x.compute()
     graph = Graph(x)
@@ -48,11 +51,6 @@ def test_transpile_array():
             assert_array_equal(root_arr, leaf_arr * 10)
 
 
-TESTS_DIR = dirname(__file__)
-ROOT_DIR = dirname(TESTS_DIR)
-PBMC_PATH = join(ROOT_DIR, "pbmc-small")
-
-
 def test_tdbs_dask():
     exp = Experiment.open(PBMC_PATH)
     dask.config.set(scheduler="synchronous")
@@ -63,4 +61,4 @@ def test_tdbs_dask():
     assert_array_equal(xd.todense(), xg.todense())
 
     evald = { k: graph.eval(k) for k in graph }
-    assert len(evald) == 13
+    assert len(evald) == 12

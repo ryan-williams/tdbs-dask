@@ -5,12 +5,13 @@ dependencies = [
     "anndata",
     "cellxgene-census",
     "click",
-    "dask[array]",
+    "dask[array]==2024.8.0",
     "numba",
     "scanpy",
     "scipy",
     "tiledb",
-    "tiledbsoma",
+    "tiledb-cloud",
+    "tiledbsoma @ git+https://github.com/single-cell-data/TileDB-SOMA@rw/ad-dask#subdirectory=apis/python",
 ]
 
 [project.optional-dependencies]
@@ -18,9 +19,6 @@ dev = [
     "bmdf",
     "pytest",
 ]
-
-[project.scripts]
-tdbs-dask = "tiledbsoma_dask.cli.main:main"
 
 [build-system]
 requires = ["setuptools>=75.0"]
